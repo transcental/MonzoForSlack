@@ -35,7 +35,7 @@ async def main(_app: Starlette):
                 channel=env.slack_user_id,
                 text=f":x: Monzo authentication failed. Please re-authenticate <{env.monzo_client.generate_monzo_url()}|here>.",
             )
-    yield
+            yield
 
 
 def start():
