@@ -32,12 +32,16 @@ class MonzoHandler:
         self.generate_state()
         return f"https://auth.monzo.com/?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code&state={self.state}"
 
-    async def post(self, path: str, data: dict = {}) -> ClientResponse:
-        data["Authorization"] = f"Bearer {self.access_token}"
+    async def post(
+        self, path: str, data: dict = {}, no_auth: bool = False
+    ) -> ClientResponse:
+        if not no_auth:
+            data["Authorization"] = f"Bearer {self.access_token}"
         async with self.session.post(f"{BASE}/{path}", data=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
-                data["Authorization"] = f"Bearer {self.access_token}"
+                if not no_auth:
+                    data["Authorization"] = f"Bearer {self.access_token}"
                 async with self.session.post(f"{BASE}/{path}", data=data) as res:
                     return res
             return res
@@ -82,6 +86,7 @@ class MonzoHandler:
                 "redirect_uri": self.redirect_uri,
                 "code": code,
             },
+            no_auth=True,
         )
         if res.status != 200:
             return False
@@ -101,6 +106,7 @@ class MonzoHandler:
                 "client_secret": self.client_secret,
                 "refresh_token": self.refresh_token,
             },
+            no_auth=True,
         )
         if res.status != 200:
             return False
