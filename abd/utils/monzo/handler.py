@@ -1,8 +1,8 @@
 import binascii
 import os
+from typing import Any
 from typing import Optional
 
-from aiohttp import ClientResponse
 from aiohttp import ClientSession
 
 
@@ -34,7 +34,7 @@ class MonzoHandler:
 
     async def post(
         self, path: str, data: dict = {}, no_auth: bool = False
-    ) -> ClientResponse:
+    ) -> tuple[Any, int]:
         if not no_auth:
             data["Authorization"] = f"Bearer {self.access_token}"
         async with self.session.post(f"{BASE}/{path}", data=data) as res:
@@ -43,41 +43,49 @@ class MonzoHandler:
                 if not no_auth:
                     data["Authorization"] = f"Bearer {self.access_token}"
                 async with self.session.post(f"{BASE}/{path}", data=data) as res:
-                    return res
-            return res
+                    json = await res.json()
+                    return json, res.status
+            json = await res.json()
+            return json, res.status
 
-    async def get(self, path: str, headers: dict = {}) -> ClientResponse:
+    async def get(self, path: str, headers: dict = {}) -> tuple[Any, int]:
         headers["Authorization"] = f"Bearer {self.access_token}"
         async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 headers["Authorization"] = f"Bearer {self.access_token}"
                 async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
-                    return res
-            return res
+                    json = await res.json()
+                    return json, res.status
+            json = await res.json()
+            return json, res.status
 
-    async def put(self, path: str, data: dict = {}) -> ClientResponse:
+    async def put(self, path: str, data: dict = {}) -> tuple[Any, int]:
         data["Authorization"] = f"Bearer {self.access_token}"
         async with self.session.put(f"{BASE}/{path}", data=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 data["Authorization"] = f"Bearer {self.access_token}"
                 async with self.session.put(f"{BASE}/{path}", data=data) as res:
-                    return res
-            return res
+                    json = await res.json()
+                    return json, res.status
+            json = await res.json()
+            return json, res.status
 
-    async def delete(self, path: str, data: dict = {}) -> ClientResponse:
+    async def delete(self, path: str, data: dict = {}) -> tuple[Any, int]:
         data["Authorization"] = f"Bearer {self.access_token}"
         async with self.session.delete(f"{BASE}/{path}", data=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 data["Authorization"] = f"Bearer {self.access_token}"
                 async with self.session.delete(f"{BASE}/{path}", data=data) as res:
-                    return res
-            return res
+                    json = await res.json()
+                    return json, res.status
+            json = await res.json()
+            return json, res.status
 
     async def exchange_code(self, code: str) -> bool:
-        res = await self.post(
+        res, status = await self.post(
             "oauth2/token",
             data={
                 "grant_type": "authorization_code",
@@ -88,9 +96,8 @@ class MonzoHandler:
             },
             no_auth=True,
         )
-        if res.status != 200:
+        if status != 200:
             return False
-        res = await res.json()
         self.access_token = res.get("access_token")
         self.refresh_token = res.get("refresh_token")
         self.expires_in = res.get("expires_in")
@@ -98,7 +105,7 @@ class MonzoHandler:
         return True
 
     async def refresh_access_token(self) -> bool:
-        res = await self.post(
+        res, status = await self.post(
             "oauth2/token",
             data={
                 "grant_type": "refresh_token",
@@ -108,9 +115,8 @@ class MonzoHandler:
             },
             no_auth=True,
         )
-        if res.status != 200:
+        if status != 200:
             return False
-        res = await res.json()
         self.access_token = res.get("access_token")
         self.refresh_token = res.get("refresh_token")
         self.expires_in = res.get("expires_in")
@@ -118,9 +124,9 @@ class MonzoHandler:
         return True
 
     async def logout(self) -> bool:
-        res = await self.post("oauth2/logout")
-        return res.status == 200
+        _res, status = await self.post("oauth2/logout")
+        return status == 200
 
     async def test_auth(self) -> bool:
-        res = await self.get("ping/whoami")
-        return res.status == 200
+        _res, status = await self.get("ping/whoami")
+        return status == 200
