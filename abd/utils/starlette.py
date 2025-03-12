@@ -77,6 +77,7 @@ app = Starlette(
         Route(path="/slack/events", endpoint=endpoint, methods=["POST"]),
         Route(path="/health", endpoint=health, methods=["GET"]),
         Route(path="/monzo/callback", endpoint=monzo_callback, methods=["GET"]),
+        Route(path="/webhook", endpoint=webhook, methods=["POST"]),
     ],
     lifespan=main,
 )
