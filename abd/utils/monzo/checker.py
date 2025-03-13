@@ -12,5 +12,4 @@ async def test_auth():
                 text=f":x: Monzo authentication failed. Please re-authenticate <{env.monzo_client.generate_monzo_url()}|here>.",
             )
         await asyncio.sleep(300)
-        auth = await env.monzo_client.test_auth()
         await env.monzo_client.check_webhooks()
