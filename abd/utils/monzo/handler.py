@@ -148,3 +148,14 @@ class MonzoHandler:
         )
         if status != 200:
             await self.check_webhooks()
+
+    async def get_pots(self) -> list[dict]:
+        res, _status = await self.get("pots")
+        return res.get("pots", [])
+
+    async def get_pot(self, id: str) -> Optional[dict]:
+        res, _status = await self.get_pots()
+        for pot in res:
+            if pot.get("id") == id:
+                return pot
+        return None

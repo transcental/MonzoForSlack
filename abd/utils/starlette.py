@@ -64,7 +64,6 @@ async def webhook(req: Request):
 
             action = "spent" if amount < 0 else "received"
             amount = abs(amount)
-            symbol = ""
 
             match currency:
                 case "GBP":
@@ -82,13 +81,21 @@ async def webhook(req: Request):
                 case _:
                     symbol = currency
 
+            emoji_str = emoji if emoji else ":ac--item-bellcoin:"
+            amount_str = f"{symbol}{(amount / 100):.2f}"
+            keyword = "with" if action == "spent" else "from"
+            region_str = f"in {city}, {country}" if city and country else ""
+            cat_str = f"on {category}" if category else ""
+
+            sentence = f"{emoji_str} <@{env.slack_user_id}> {action} *{amount_str}* {keyword} *{name}* {region_str} {cat_str}"
+
             await env.slack_client.chat_postMessage(
-                text=f"{emoji} <@{env.slack_user_id}> {action} *{symbol}{(amount / 100):.2f}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
+                text=sentence,
                 channel=env.slack_log_channel,
                 icon_url=icon,
             )
             await send_heartbeat(
-                f"{emoji} {action} *{symbol}{(amount / 100):.2f}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
+                heartbeat=sentence,
                 messages=[f"```{data}```"],
             )
     return JSONResponse({"message": "Request successfully received"})
