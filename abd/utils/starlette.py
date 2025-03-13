@@ -42,6 +42,9 @@ async def webhook(req: Request):
             name = merchant.get("name")
             currency = data.get("currency")
             category = data.get("category")
+            address = merchant.get("address", {})
+            city = address.get("city")
+            country = address.get("country")
 
             action = "spent" if amount < 0 else "received"
             amount = abs(amount)
@@ -64,7 +67,7 @@ async def webhook(req: Request):
                     symbol = currency
 
             await env.slack_client.chat_postMessage(
-                text=f"{emoji} <@{env.slack_user_id}> {action} *{symbol}{amount / 100}* {'with' if action == 'spent' else 'from'} *{name}* on {category}",
+                text=f"{emoji} <@{env.slack_user_id}> {action} *{symbol}{amount / 100}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
                 channel=env.slack_log_channel,
                 icon_url=icon,
             )
