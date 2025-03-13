@@ -1,11 +1,10 @@
 import binascii
+import logging
 import os
 from typing import Any
 from typing import Optional
 
 from aiohttp import ClientSession
-
-from abd.utils.logging import send_heartbeat
 
 
 BASE = "https://api.monzo.com"
@@ -63,7 +62,7 @@ class MonzoHandler:
             # check mimetype
             if "application/json" not in res.headers.get("Content-Type", ""):
                 text = await res.text()
-                await send_heartbeat("Monzo API returned non-JSON response.", [text])
+                logging.warn("Monzo API returned non-JSON response.", [text])
                 return text, res.status
             json = await res.json()
             return json, res.status
