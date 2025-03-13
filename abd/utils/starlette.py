@@ -49,7 +49,7 @@ async def webhook(req: Request):
     match type:
         case "transaction.created":
             amount = data.get("amount")
-            merchant = data.get("merchant")
+            merchant = data.get("merchant", {})
             icon = merchant.get("logo")
             emoji = merchant.get("emoji")
             name = merchant.get("name")
