@@ -9,6 +9,7 @@ from starlette.applications import Starlette
 
 from abd.utils.env import env
 from abd.utils.logging import send_heartbeat
+from abd.utils.monzo.checker import test_auth
 
 load_dotenv()
 
@@ -28,16 +29,7 @@ async def main(_app: Starlette):
     async with ClientSession() as session:
         env.session = session
         env.monzo_client.session = session
-
-        auth = await env.monzo_client.test_auth()
-        while not auth:
-            await env.slack_client.chat_postMessage(
-                channel=env.slack_user_id,
-                text=f":x: Monzo authentication failed. Please re-authenticate <{env.monzo_client.generate_monzo_url()}|here>.",
-            )
-            await asyncio.sleep(60)
-            auth = await env.monzo_client.test_auth()
-        await env.monzo_client.check_webhooks()
+        asyncio.create_task(test_auth())
         yield
 
 
