@@ -5,6 +5,8 @@ from typing import Optional
 
 from aiohttp import ClientSession
 
+from abd.utils.logging import send_heartbeat
+
 
 BASE = "https://api.monzo.com"
 
@@ -58,6 +60,11 @@ class MonzoHandler:
                 async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
                     json = await res.json()
                     return json, res.status
+            # check mimetype
+            if "application/json" not in res.headers.get("Content-Type", ""):
+                text = await res.text()
+                await send_heartbeat("Monzo API returned non-JSON response.", [text])
+                return text, res.status
             json = await res.json()
             return json, res.status
 
