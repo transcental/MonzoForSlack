@@ -1,3 +1,4 @@
+import asyncio
 import binascii
 import logging
 import os
@@ -47,6 +48,11 @@ class MonzoHandler:
                 async with self.session.post(f"{BASE}/{path}", data=data) as res:
                     json = await res.json()
                     return json, res.status
+            elif res.status == 429:
+                logging.warning("Rate limited")
+                retry = float(res.headers.get("Retry-After", 5))
+                await asyncio.sleep(retry)
+                await self.post(path, data)
             json = await res.json()
             return json, res.status
 
@@ -59,11 +65,11 @@ class MonzoHandler:
                 async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
                     json = await res.json()
                     return json, res.status
-            # check mimetype
-            if "application/json" not in res.headers.get("Content-Type", ""):
-                text = await res.text()
-                logging.warn("Monzo API returned non-JSON response.", [text])
-                return text, res.status
+            elif res.status == 429:
+                logging.warning("Rate limited")
+                retry = float(res.headers.get("Retry-After", 5))
+                await asyncio.sleep(retry)
+                await self.get(path, headers)
             json = await res.json()
             return json, res.status
 
@@ -76,6 +82,11 @@ class MonzoHandler:
                 async with self.session.put(f"{BASE}/{path}", data=data) as res:
                     json = await res.json()
                     return json, res.status
+            elif res.status == 429:
+                logging.warning("Rate limited")
+                retry = float(res.headers.get("Retry-After", 5))
+                await asyncio.sleep(retry)
+                await self.put(path, data)
             json = await res.json()
             return json, res.status
 
@@ -88,6 +99,11 @@ class MonzoHandler:
                 async with self.session.delete(f"{BASE}/{path}", data=data) as res:
                     json = await res.json()
                     return json, res.status
+            elif res.status == 429:
+                logging.warning("Rate limited")
+                retry = float(res.headers.get("Retry-After", 5))
+                await asyncio.sleep(retry)
+                await self.delete(path, data)
             json = await res.json()
             return json, res.status
 
