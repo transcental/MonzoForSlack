@@ -6,6 +6,7 @@ from starlette.routing import Route
 
 from abd.__main__ import main
 from abd.utils.env import env
+from abd.utils.logging import send_heartbeat
 from abd.utils.slack import app as slack_app
 
 req_handler = AsyncSlackRequestHandler(slack_app)
@@ -82,9 +83,13 @@ async def webhook(req: Request):
                     symbol = currency
 
             await env.slack_client.chat_postMessage(
-                text=f"{emoji} <@{env.slack_user_id}> {action} *{symbol}{amount / 100}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
+                text=f"{emoji} <@{env.slack_user_id}> {action} *{symbol}{(amount / 100):.2f}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
                 channel=env.slack_log_channel,
                 icon_url=icon,
+            )
+            await send_heartbeat(
+                f"{emoji} {action} *{symbol}{(amount / 100):.2f}* {'with' if action == 'spent' else 'from'} *{name}* in {city}, {country} on {category}",
+                messages=[f"```{data}```"],
             )
     return JSONResponse({"message": "Request successfully received"})
 
