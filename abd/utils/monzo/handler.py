@@ -52,7 +52,7 @@ class MonzoHandler:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
                 await asyncio.sleep(retry)
-                await self.post(path, data)
+                return await self.post(path, data)
             json = await res.json()
             return json, res.status
 
@@ -69,7 +69,7 @@ class MonzoHandler:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
                 await asyncio.sleep(retry)
-                await self.get(path, headers)
+                return await self.get(path, headers)
             json = await res.json()
             return json, res.status
 
@@ -86,7 +86,7 @@ class MonzoHandler:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
                 await asyncio.sleep(retry)
-                await self.put(path, data)
+                return await self.put(path, data)
             json = await res.json()
             return json, res.status
 
@@ -103,7 +103,7 @@ class MonzoHandler:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
                 await asyncio.sleep(retry)
-                await self.delete(path, data)
+                return await self.delete(path, data)
             json = await res.json()
             return json, res.status
 
