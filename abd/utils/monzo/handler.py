@@ -133,7 +133,7 @@ class MonzoHandler:
         return status == 200
 
     async def check_webhooks(self) -> None:
-        res, _ = await self.get("webhooks")
+        res, _status = await self.get("webhooks")
         webhooks = res.get("webhooks", [])
         found = False
         for webhook in webhooks:
@@ -142,7 +142,7 @@ class MonzoHandler:
                 break
         if found:
             return
-        res, status = await self.post(
+        _res, status = await self.post(
             "webhooks",
             data={"account_id": self.user_id, "url": f"{self.domain}/monzo/webhook"},
         )
