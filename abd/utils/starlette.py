@@ -16,7 +16,20 @@ async def endpoint(req: Request):
 
 
 async def health(req: Request):
-    return JSONResponse({"healthy": True})
+    monzo_healthy = await env.monzo_client.test_auth()
+    try:
+        await env.slack_client.api_test()
+        slack_healthy = True
+    except Exception:
+        slack_healthy = False
+
+    return JSONResponse(
+        {
+            "healthy": monzo_healthy and slack_healthy,
+            "monzo": monzo_healthy,
+            "slack": slack_healthy,
+        }
+    )
 
 
 async def monzo_callback(req: Request):
