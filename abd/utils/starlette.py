@@ -83,16 +83,16 @@ async def webhook(req: Request):
 
             emoji_str = emoji if emoji else ":ac--item-bellcoin:"
             amount_str = f"{symbol}{(amount / 100):.2f}"
-            keyword = "with" if action == "spent" else "from"
             region_str = f" in {city}, {country}" if city and country else ""
             cat_str = f" on {category}" if category else ""
 
-            sentence = f"{emoji_str} <@{env.slack_user_id}> {action} *{amount_str}* {keyword} *{name}*{region_str}{cat_str}"
+            sentence = f"{emoji_str} <@{env.slack_user_id}> {action} *{amount_str}*{region_str}{cat_str}"
 
             await env.slack_client.chat_postMessage(
                 text=sentence,
                 channel=env.slack_log_channel,
                 icon_url=icon,
+                username=name,
             )
             await send_heartbeat(
                 heartbeat=sentence,
