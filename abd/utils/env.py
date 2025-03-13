@@ -22,7 +22,7 @@ class Environment:
 
         self.monzo_client_id = os.environ.get("MONZO_CLIENT_ID", "unset")
         self.monzo_client_secret = os.environ.get("MONZO_CLIENT_SECRET", "unset")
-        self.monzo_redirect_uri = os.environ.get("MONZO_REDIRECT_URI", "unset")
+        self.domain = os.environ.get("DOMAIN", "unset")
 
         self.environment = os.environ.get("ENVIRONMENT", "development")
 
@@ -38,7 +38,7 @@ class Environment:
         self.monzo_client = MonzoHandler(
             client_id=self.monzo_client_id,
             client_secret=self.monzo_client_secret,
-            redirect_uri=self.monzo_redirect_uri,
+            domain=self.domain,
         )
         self.slack_client = AsyncWebClient(token=self.slack_bot_token)
 

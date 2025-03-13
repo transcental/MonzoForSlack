@@ -30,12 +30,15 @@ async def main(_app: Starlette):
         env.monzo_client.session = session
 
         auth = await env.monzo_client.test_auth()
-        if not auth:
+        while not auth:
             await env.slack_client.chat_postMessage(
                 channel=env.slack_user_id,
                 text=f":x: Monzo authentication failed. Please re-authenticate <{env.monzo_client.generate_monzo_url()}|here>.",
             )
-            yield
+            await asyncio.sleep(60)
+            auth = await env.monzo_client.test_auth()
+        await env.monzo_client.check_webhooks()
+        yield
 
 
 def start():
