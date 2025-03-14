@@ -1,6 +1,8 @@
 {
     "display_information": {
-        "name": "Monzo"
+        "name": "Monzo for Slack",
+        "description": "Tracking your finances",
+        "background_color": "#d45443"
     },
     "features": {
         "bot_user": {
