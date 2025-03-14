@@ -49,21 +49,23 @@ async def webhook(req: Request):
     data = data.get("data", {})
     match type:
         case "transaction.created":
-            amount = data.get("amount")
-            merchant = data.get("merchant")
-            if not merchant:
-                merchant = {}
+            raw_amount = data.get("amount")
+            merchant = data.get("merchant", {})
+            # Check if it's a transfer
+            metadata = data.get("metadata", {})
+            emoji: str = ":ac--item-bellcoin:"
+
             icon = merchant.get("logo")
             emoji = merchant.get("emoji")
             name = merchant.get("name", "a mystery place")
-            currency = data.get("currency")
-            category = data.get("category")
             address = merchant.get("address", {})
             city = address.get("city")
             country = address.get("country")
 
-            action = "spent" if amount < 0 else "received"
-            amount = abs(amount)
+            currency = data.get("currency")
+            category = data.get("category")
+            action = "spent" if raw_amount < 0 else "received"
+            amount = abs(raw_amount)
 
             match currency:
                 case "GBP":
@@ -81,12 +83,23 @@ async def webhook(req: Request):
                 case _:
                     symbol = currency
 
-            emoji_str = emoji if emoji else ":ac--item-bellcoin:"
             amount_str = f"{symbol}{(amount / 100):.2f}"
             region_str = f" in {city}, {country}" if city and country else ""
             cat_str = f" on {category}" if category else ""
 
-            sentence = f"{emoji_str} <@{env.slack_user_id}> {action} *{amount_str}*{region_str}{cat_str}"
+            sentence = f"{emoji} <@{env.slack_user_id}> {action} *{amount_str}*{region_str}{cat_str}"
+
+            if metadata.get("p2p_transfer_id"):
+                # P2P Transfer
+                name = "Monzo Transfer"
+                emoji = ":blobby-money_with_wings:"
+                user = (
+                    data.get("counterparty", {}).get("preferred_name")
+                    or data.get("counterparty", {}).get("name")
+                    or data.get("description")
+                    or "a mystery person"
+                )
+                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a {amount_str} transfer {'from' if raw_amount > 0 else 'to'} {user}"
 
             await env.slack_client.chat_postMessage(
                 text=sentence,
