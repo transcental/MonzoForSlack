@@ -50,13 +50,12 @@ async def webhook(req: Request):
     match type:
         case "transaction.created":
             raw_amount = data.get("amount")
-            merchant = data.get("merchant", {})
+            merchant = data.get("merchant", {}) or {}
             # Check if it's a transfer
-            metadata = data.get("metadata", {})
-            emoji: str = ":ac--item-bellcoin:"
+            metadata = data.get("metadata", {}) or {}
 
             icon = merchant.get("logo")
-            emoji = merchant.get("emoji")
+            emoji = merchant.get("emoji", ":ac--item-bellcoin:")
             name = merchant.get("name", "a mystery place")
             address = merchant.get("address", {})
             city = address.get("city")
