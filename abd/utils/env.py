@@ -26,11 +26,7 @@ class Environment:
         self.port = int(os.environ.get("PORT", 3000))
         self.logging = True if os.environ.get("LOGGING") else False
 
-        self.slack_heartbeat_channel: str
-        if self.logging:
-            self.slack_heartbeat_channel = os.environ.get(
-                "SLACK_HEARTBEAT_CHANNEL", "unset"
-            )
+        self.slack_heartbeat_channel = os.environ.get("SLACK_HEARTBEAT_CHANNEL")
 
         unset = [key for key, value in self.__dict__.items() if value == "unset"]
 
