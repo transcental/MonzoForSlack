@@ -98,7 +98,7 @@ async def webhook(req: Request):
                     or data.get("description")
                     or "a mystery person"
                 )
-                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a {amount_str} transfer {'from' if raw_amount > 0 else 'to'} {user}"
+                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a *{amount_str}* transfer {'from' if raw_amount > 0 else 'to'} *{user}*"
 
             await env.slack_client.chat_postMessage(
                 text=sentence,
