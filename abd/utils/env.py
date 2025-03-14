@@ -14,9 +14,6 @@ class Environment:
         self.slack_bot_token = os.environ.get("SLACK_BOT_TOKEN", "unset")
         self.slack_signing_secret = os.environ.get("SLACK_SIGNING_SECRET", "unset")
 
-        self.slack_heartbeat_channel = os.environ.get(
-            "SLACK_HEARTBEAT_CHANNEL", "unset"
-        )
         self.slack_log_channel = os.environ.get("SLACK_LOG_CHANNEL", "unset")
         self.slack_user_id = os.environ.get("SLACK_USER_ID", "unset")
 
@@ -27,6 +24,13 @@ class Environment:
         self.environment = os.environ.get("ENVIRONMENT", "development")
 
         self.port = int(os.environ.get("PORT", 3000))
+        self.logging = True if os.environ.get("LOGGING") else False
+
+        self.slack_heartbeat_channel: str
+        if self.logging:
+            self.slack_heartbeat_channel = os.environ.get(
+                "SLACK_HEARTBEAT_CHANNEL", "unset"
+            )
 
         unset = [key for key, value in self.__dict__.items() if value == "unset"]
 
