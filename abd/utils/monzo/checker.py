@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from abd.utils.env import env
 
@@ -13,6 +14,8 @@ async def test_auth():
             )
             await asyncio.sleep(100)
             auth = await env.monzo_client.test_auth()
+        pots = await env.monzo_client.get_pots()
+        logging.info(pots)
         res = await env.monzo_client.check_webhooks()
         if not auth and res:
             await env.slack_client.chat_postMessage(
