@@ -48,7 +48,7 @@ async def webhook(req: Request):
     type = data.get("type")
     data = data.get("data", {})
     verif = req.query_params.get("auth")
-    if verif != env.webhook_verification:
+    if verif != env.webhook_verif:
         return JSONResponse({"error": "Invalid verification code"})
     match type:
         case "transaction.created":
