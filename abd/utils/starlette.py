@@ -49,6 +49,10 @@ async def webhook(req: Request):
     data = data.get("data", {})
     verif = req.query_params.get("auth")
     if verif != env.webhook_verif:
+        await send_heartbeat(
+            heartbeat="Invalid verification code",
+            messages=[f"Code: `{verif}`\n```{data}```"],
+        )
         return JSONResponse({"error": "Invalid verification code"})
     match type:
         case "transaction.created":
