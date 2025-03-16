@@ -5,6 +5,7 @@ ADD . /app
 
 WORKDIR /app
 
+RUN apt install -y curl
 RUN uv python install
 RUN uv sync --frozen
 
