@@ -11,7 +11,7 @@ async def test_auth():
                 channel=env.slack_user_id,
                 text=f":x: Monzo authentication failed. Please re-authenticate <{env.monzo_client.generate_monzo_url()}|here>.",
             )
-            await asyncio.sleep(200)
+            await asyncio.sleep(100)
         res = await env.monzo_client.check_webhooks()
         if not auth and res:
             await env.slack_client.chat_postMessage(
