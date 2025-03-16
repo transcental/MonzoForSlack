@@ -44,7 +44,6 @@ class MonzoHandler:
         if not no_auth:
             headers["Authorization"] = f"Bearer {self.access_token}"
 
-        logging.info(headers, kwargs)
         try:
             async with self.session.post(
                 f"{BASE}/{path}", headers=headers, **kwargs
@@ -198,6 +197,7 @@ class MonzoHandler:
 
     async def test_auth(self) -> bool:
         _res, status = await self.get("ping/whoami")
+        logging.info("Test Auth: ", status, _res)
         return status == 200
 
     async def check_webhooks(self) -> bool:
