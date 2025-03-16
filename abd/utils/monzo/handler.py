@@ -197,7 +197,6 @@ class MonzoHandler:
 
     async def test_auth(self) -> bool:
         _res, status = await self.get("ping/whoami")
-        logging.info("Test Auth: ", status, _res)
         return status == 200
 
     async def check_webhooks(self) -> bool:
