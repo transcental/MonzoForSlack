@@ -92,7 +92,7 @@ async def webhook(req: Request):
                 # P2P Transfer
                 name = "Monzo Transfer"
                 emoji = ":blobby-money_with_wings:"
-                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a *{amount_str}* transfer {'from' if raw_amount > 0 else 'to'} {'a greedy person' if raw_amount > 0 else 'a kind person'}"
+                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a *{amount_str}* transfer {'from' if raw_amount > 0 else 'to'} {'a greedy person' if raw_amount < 0 else 'a kind person'}"
 
             await env.slack_client.chat_postMessage(
                 text=sentence,
