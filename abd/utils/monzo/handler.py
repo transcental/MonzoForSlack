@@ -43,12 +43,12 @@ class MonzoHandler:
     ) -> tuple[Any, int]:
         if not no_auth:
             data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.post(f"{BASE}/{path}", data=data) as res:
+        async with self.session.post(f"{BASE}/{path}", json=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 if not no_auth:
                     data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.post(f"{BASE}/{path}", data=data) as res:
+                async with self.session.post(f"{BASE}/{path}", json=data) as res:
                     json = await res.json()
                     return json, res.status
             elif res.status == 429:
@@ -78,11 +78,11 @@ class MonzoHandler:
 
     async def put(self, path: str, data: dict = {}) -> tuple[Any, int]:
         data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.put(f"{BASE}/{path}", data=data) as res:
+        async with self.session.put(f"{BASE}/{path}", json=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.put(f"{BASE}/{path}", data=data) as res:
+                async with self.session.put(f"{BASE}/{path}", json=data) as res:
                     json = await res.json()
                     return json, res.status
             elif res.status == 429:
@@ -95,11 +95,11 @@ class MonzoHandler:
 
     async def delete(self, path: str, data: dict = {}) -> tuple[Any, int]:
         data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.delete(f"{BASE}/{path}", data=data) as res:
+        async with self.session.delete(f"{BASE}/{path}", json=data) as res:
             if res.status == 401:
                 await self.refresh_access_token()
                 data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.delete(f"{BASE}/{path}", data=data) as res:
+                async with self.session.delete(f"{BASE}/{path}", json=data) as res:
                     json = await res.json()
                     return json, res.status
             elif res.status == 429:
