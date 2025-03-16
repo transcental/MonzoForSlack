@@ -103,8 +103,8 @@ class MonzoHandler:
                     json = await res.json()
                     return json, res.status
             elif res.status == 429:
-                logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
+                logging.warning("Rate limited for ", retry)
                 await asyncio.sleep(retry)
                 return await self.delete(path, data)
             json = await res.json()
@@ -157,7 +157,7 @@ class MonzoHandler:
         _res, status = await self.get("ping/whoami")
         return status == 200
 
-    async def check_webhooks(self) -> None:
+    async def check_webhooks(self) -> bool:
         res, _status = await self.get("webhooks")
         webhooks = res.get("webhooks", [])
         found = False
@@ -167,7 +167,7 @@ class MonzoHandler:
                 found = True
                 break
         if found:
-            return
+            return True
         _res, status = await self.post(
             "webhooks",
             data={
@@ -177,6 +177,7 @@ class MonzoHandler:
         )
         if status != 200:
             await self.check_webhooks()
+        return True
 
     async def get_pots(self) -> list[dict]:
         res, _status = await self.get("pots")
