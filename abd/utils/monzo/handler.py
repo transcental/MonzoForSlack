@@ -161,11 +161,9 @@ class MonzoHandler:
         res, _status = await self.get("webhooks")
         webhooks = res.get("webhooks", [])
         found = False
+        url = f"{self.domain}/monzo/webhook?auth={self.webhook_verification}"
         for webhook in webhooks:
-            if (
-                webhook.get("url")
-                == f"{self.domain}/monzo/webhook?auth={self.webhook_verification}"
-            ):
+            if webhook.get("url") == url:
                 found = True
                 break
         if found:
@@ -174,7 +172,7 @@ class MonzoHandler:
             "webhooks",
             data={
                 "account_id": self.user_id,
-                "url": f"{self.domain}/monzo/webhook?auth={self.webhook_verification}",
+                "url": url,
             },
         )
         if status != 200:
