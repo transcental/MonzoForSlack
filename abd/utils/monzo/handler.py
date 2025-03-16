@@ -193,7 +193,7 @@ class MonzoHandler:
         logging.info("Webhook not found, creating")
         _res, status = await self.post(
             "webhooks",
-            json={
+            data={
                 "account_id": self.user_id,
                 "url": url,
             },
