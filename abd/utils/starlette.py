@@ -47,7 +47,7 @@ async def webhook(req: Request):
     data = await req.json()
     type = data.get("type")
     data = data.get("data", {})
-    verif = req.query_params.get("auth")
+    verif = req.query_params.get("verif")
     if verif != env.webhook_verif:
         await send_heartbeat(
             heartbeat="Invalid verification code",

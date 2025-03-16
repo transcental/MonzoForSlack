@@ -161,7 +161,7 @@ class MonzoHandler:
         res, _status = await self.get("webhooks")
         webhooks = res.get("webhooks", [])
         found = False
-        url = f"{self.domain}/monzo/webhook?auth={self.webhook_verification}"
+        url = f"{self.domain}/monzo/webhook?verif={self.webhook_verification}"
         for webhook in webhooks:
             if webhook.get("url") == url:
                 found = True
