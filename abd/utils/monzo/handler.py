@@ -44,6 +44,7 @@ class MonzoHandler:
         if not no_auth:
             headers["Authorization"] = f"Bearer {self.access_token}"
 
+        logging.info(headers, kwargs)
         try:
             async with self.session.post(
                 f"{BASE}/{path}", headers=headers, **kwargs
@@ -193,11 +194,13 @@ class MonzoHandler:
         logging.info("Webhook not found, creating")
         _res, status = await self.post(
             "webhooks",
+            no_auth=False,
             data={
                 "account_id": self.user_id,
                 "url": url,
             },
         )
+        logging.info(_res, status)
         if status != 200:
             await self.check_webhooks()
         return True
