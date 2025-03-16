@@ -39,7 +39,9 @@ async def monzo_callback(req: Request):
     if state != env.monzo_client.state:
         return JSONResponse({"error": "Invalid state"})
 
-    await env.monzo_client.exchange_code(code)
+    res = await env.monzo_client.exchange_code(code)
+    if not res:
+        return JSONResponse({"error": "Failed to exchange code"})
     return JSONResponse({"message": "Authorised"})
 
 

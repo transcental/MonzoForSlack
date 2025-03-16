@@ -38,24 +38,24 @@ class MonzoHandler:
         self.generate_state()
         return f"https://auth.monzo.com/?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code&state={self.state}"
 
-    async def post(
-        self, path: str, data: dict = {}, no_auth: bool = False
-    ) -> tuple[Any, int]:
+    async def post(self, path: str, no_auth: bool = False, **kwargs) -> tuple[Any, int]:
+        headers = kwargs.get("headers", {})
+        kwargs.pop("headers", None)
+
         if not no_auth:
-            data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.post(f"{BASE}/{path}", json=data) as res:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+
+        async with self.session.post(
+            f"{BASE}/{path}", headers=headers, **kwargs
+        ) as res:
             if res.status == 401:
                 await self.refresh_access_token()
-                if not no_auth:
-                    data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.post(f"{BASE}/{path}", json=data) as res:
-                    json = await res.json()
-                    return json, res.status
+                return await self.post(path, no_auth, **kwargs)
             elif res.status == 429:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
                 await asyncio.sleep(retry)
-                return await self.post(path, data)
+                return await self.post(path, no_auth, **kwargs)
             json = await res.json()
             return json, res.status
 
@@ -64,10 +64,7 @@ class MonzoHandler:
         async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
             if res.status == 401:
                 await self.refresh_access_token()
-                headers["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
-                    json = await res.json()
-                    return json, res.status
+                return await self.get(path, headers)
             elif res.status == 429:
                 logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
@@ -76,37 +73,37 @@ class MonzoHandler:
             json = await res.json()
             return json, res.status
 
-    async def put(self, path: str, data: dict = {}) -> tuple[Any, int]:
-        data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.put(f"{BASE}/{path}", json=data) as res:
+    async def put(self, path: str, **kwargs) -> tuple[Any, int]:
+        headers = kwargs.get("headers", {})
+        kwargs.pop("headers", None)
+        headers["Authorization"] = f"Bearer {self.access_token}"
+        async with self.session.put(f"{BASE}/{path}", headers=headers, **kwargs) as res:
             if res.status == 401:
                 await self.refresh_access_token()
-                data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.put(f"{BASE}/{path}", json=data) as res:
-                    json = await res.json()
-                    return json, res.status
+                return await self.put(path, **kwargs)
             elif res.status == 429:
-                logging.warning("Rate limited")
                 retry = float(res.headers.get("Retry-After", 5))
+                logging.warning(f"Rate limited for {retry}s")
                 await asyncio.sleep(retry)
-                return await self.put(path, data)
+                return await self.put(path, **kwargs)
             json = await res.json()
             return json, res.status
 
-    async def delete(self, path: str, data: dict = {}) -> tuple[Any, int]:
-        data["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.delete(f"{BASE}/{path}", json=data) as res:
+    async def delete(self, path: str, **kwargs) -> tuple[Any, int]:
+        headers = kwargs.get("headers", {})
+        kwargs.pop("headers", None)
+        headers["Authorization"] = f"Bearer {self.access_token}"
+        async with self.session.delete(
+            f"{BASE}/{path}", headers=headers, **kwargs
+        ) as res:
             if res.status == 401:
                 await self.refresh_access_token()
-                data["Authorization"] = f"Bearer {self.access_token}"
-                async with self.session.delete(f"{BASE}/{path}", json=data) as res:
-                    json = await res.json()
-                    return json, res.status
+                return await self.delete(path, **kwargs)
             elif res.status == 429:
                 retry = float(res.headers.get("Retry-After", 5))
-                logging.warning("Rate limited for ", retry)
+                logging.warning(f"Rate limited for {retry}s")
                 await asyncio.sleep(retry)
-                return await self.delete(path, data)
+                return await self.delete(path, **kwargs)
             json = await res.json()
             return json, res.status
 
@@ -122,7 +119,11 @@ class MonzoHandler:
             },
             no_auth=True,
         )
-        if status != 200:
+        if status == 429:
+            retry = float(res.headers.get("Retry-After", 5))
+            await asyncio.sleep(retry)
+            return await self.exchange_code(code)
+        elif status != 200:
             return False
         self.access_token = res.get("access_token")
         self.refresh_token = res.get("refresh_token")
@@ -147,6 +148,7 @@ class MonzoHandler:
         self.refresh_token = res.get("refresh_token")
         self.expires_in = res.get("expires_in")
         self.user_id = res.get("user_id")
+        logging.info("Refreshed access token")
         return True
 
     async def logout(self) -> bool:
@@ -170,7 +172,7 @@ class MonzoHandler:
             return True
         _res, status = await self.post(
             "webhooks",
-            data={
+            json={
                 "account_id": self.user_id,
                 "url": url,
             },
