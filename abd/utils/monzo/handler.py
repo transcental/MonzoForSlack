@@ -57,6 +57,11 @@ class MonzoHandler:
                     retry = float(res.headers.get("Retry-After", 5))
                     await asyncio.sleep(retry)
                     return await self.post(path, no_auth, **kwargs)
+                elif res.status == 403:
+                    logging.error(
+                        "Request authenticated but has no perms - not confirmed in app?"
+                    )
+                    return None, 403
                 json = await res.json()
                 return json, res.status
         except Exception as e:
@@ -78,6 +83,11 @@ class MonzoHandler:
                     retry = float(res.headers.get("Retry-After", 5))
                     await asyncio.sleep(retry)
                     return await self.get(path, headers)
+                elif res.status == 403:
+                    logging.error(
+                        "Request authenticated but has no perms - not confirmed in app?"
+                    )
+                    return None, 403
                 json = await res.json()
                 return json, res.status
         except Exception as e:
@@ -100,6 +110,11 @@ class MonzoHandler:
                     logging.warning(f"Rate limited for {retry}s")
                     await asyncio.sleep(retry)
                     return await self.put(path, **kwargs)
+                elif res.status == 403:
+                    logging.error(
+                        "Request authenticated but has no perms - not confirmed in app?"
+                    )
+                    return None, 403
                 json = await res.json()
                 return json, res.status
         except Exception as e:
@@ -122,6 +137,11 @@ class MonzoHandler:
                     logging.warning(f"Rate limited for {retry}s")
                     await asyncio.sleep(retry)
                     return await self.delete(path, **kwargs)
+                elif res.status == 403:
+                    logging.error(
+                        "Request authenticated but has no perms - not confirmed in app?"
+                    )
+                    return None, 403
                 json = await res.json()
                 return json, res.status
         except Exception as e:
