@@ -210,19 +210,19 @@ class MonzoHandler:
                 break
         if found:
             return True
-        logging.info("Webhook not found, creating")
-        _res, status = await self.post(
-            "webhooks",
-            no_auth=False,
-            data={
-                "account_id": self.user_id,
-                "url": url,
-            },
-        )
-        logging.info(_res, status)
-        if status != 200:
-            await self.check_webhooks()
-        return True
+        # logging.info("Webhook not found, creating")
+        # _res, status = await self.post(
+        #     "webhooks",
+        #     no_auth=False,
+        #     data={
+        #         "account_id": self.user_id,
+        #         "url": url,
+        #     },
+        # )
+        # logging.info(_res, status)
+        # if status != 200:
+        #     await self.check_webhooks()
+        return False
 
     async def get_pots(self) -> list[dict]:
         res, _status = await self.get("pots")

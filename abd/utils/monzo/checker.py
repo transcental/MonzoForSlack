@@ -14,10 +14,10 @@ async def test_auth():
             await asyncio.sleep(100)
             auth = await env.monzo_client.test_auth()
 
-        res = await env.monzo_client.check_webhooks()
-        if not auth and res:
-            await env.slack_client.chat_postMessage(
-                channel=env.slack_user_id,
-                text=":white_check_mark: Authenticated successfully",
-            )
+        await env.monzo_client.check_webhooks()
+        # if not auth and res:
+        #     await env.slack_client.chat_postMessage(
+        #         channel=env.slack_user_id,
+        #         text=":white_check_mark: Authenticated successfully",
+        #     )
         await asyncio.sleep(1200)
