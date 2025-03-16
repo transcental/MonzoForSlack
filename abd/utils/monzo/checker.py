@@ -18,4 +18,4 @@ async def test_auth():
                 channel=env.slack_user_id,
                 text=":white_check_mark: Authenticated successfully",
             )
-        await asyncio.sleep(600)
+        await asyncio.sleep(1200)

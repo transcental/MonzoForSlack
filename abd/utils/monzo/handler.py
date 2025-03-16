@@ -39,73 +39,93 @@ class MonzoHandler:
         return f"https://auth.monzo.com/?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code&state={self.state}"
 
     async def post(self, path: str, no_auth: bool = False, **kwargs) -> tuple[Any, int]:
-        headers = kwargs.get("headers", {})
-        kwargs.pop("headers", None)
+        headers = kwargs.pop("headers", {})
 
         if not no_auth:
             headers["Authorization"] = f"Bearer {self.access_token}"
 
-        async with self.session.post(
-            f"{BASE}/{path}", headers=headers, **kwargs
-        ) as res:
-            if res.status == 401:
-                await self.refresh_access_token()
-                return await self.post(path, no_auth, **kwargs)
-            elif res.status == 429:
-                logging.warning("Rate limited")
-                retry = float(res.headers.get("Retry-After", 5))
-                await asyncio.sleep(retry)
-                return await self.post(path, no_auth, **kwargs)
-            json = await res.json()
-            return json, res.status
+        try:
+            async with self.session.post(
+                f"{BASE}/{path}", headers=headers, **kwargs
+            ) as res:
+                if res.status == 401:
+                    await self.refresh_access_token()
+                    return await self.post(path, no_auth, **kwargs)
+                elif res.status == 429:
+                    logging.warning("Rate limited")
+                    retry = float(res.headers.get("Retry-After", 5))
+                    await asyncio.sleep(retry)
+                    return await self.post(path, no_auth, **kwargs)
+                json = await res.json()
+                return json, res.status
+        except Exception as e:
+            logging.error(f"An error occurred during POST request: {e}")
+            return None, 500
 
-    async def get(self, path: str, headers: dict = {}) -> tuple[Any, int]:
+    async def get(self, path: str, headers: Optional[dict] = None) -> tuple[Any, int]:
+        if headers is None:
+            headers = {}
         headers["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
-            if res.status == 401:
-                await self.refresh_access_token()
-                return await self.get(path, headers)
-            elif res.status == 429:
-                logging.warning("Rate limited")
-                retry = float(res.headers.get("Retry-After", 5))
-                await asyncio.sleep(retry)
-                return await self.get(path, headers)
-            json = await res.json()
-            return json, res.status
+
+        try:
+            async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
+                if res.status == 401:
+                    await self.refresh_access_token()
+                    return await self.get(path, headers)
+                elif res.status == 429:
+                    logging.warning("Rate limited")
+                    retry = float(res.headers.get("Retry-After", 5))
+                    await asyncio.sleep(retry)
+                    return await self.get(path, headers)
+                json = await res.json()
+                return json, res.status
+        except Exception as e:
+            logging.error(f"An error occurred during GET request: {e}")
+            return None, 500
 
     async def put(self, path: str, **kwargs) -> tuple[Any, int]:
-        headers = kwargs.get("headers", {})
-        kwargs.pop("headers", None)
+        headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.put(f"{BASE}/{path}", headers=headers, **kwargs) as res:
-            if res.status == 401:
-                await self.refresh_access_token()
-                return await self.put(path, **kwargs)
-            elif res.status == 429:
-                retry = float(res.headers.get("Retry-After", 5))
-                logging.warning(f"Rate limited for {retry}s")
-                await asyncio.sleep(retry)
-                return await self.put(path, **kwargs)
-            json = await res.json()
-            return json, res.status
+
+        try:
+            async with self.session.put(
+                f"{BASE}/{path}", headers=headers, **kwargs
+            ) as res:
+                if res.status == 401:
+                    await self.refresh_access_token()
+                    return await self.put(path, **kwargs)
+                elif res.status == 429:
+                    retry = float(res.headers.get("Retry-After", 5))
+                    logging.warning(f"Rate limited for {retry}s")
+                    await asyncio.sleep(retry)
+                    return await self.put(path, **kwargs)
+                json = await res.json()
+                return json, res.status
+        except Exception as e:
+            logging.error(f"An error occurred during PUT request: {e}")
+            return None, 500
 
     async def delete(self, path: str, **kwargs) -> tuple[Any, int]:
-        headers = kwargs.get("headers", {})
-        kwargs.pop("headers", None)
+        headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {self.access_token}"
-        async with self.session.delete(
-            f"{BASE}/{path}", headers=headers, **kwargs
-        ) as res:
-            if res.status == 401:
-                await self.refresh_access_token()
-                return await self.delete(path, **kwargs)
-            elif res.status == 429:
-                retry = float(res.headers.get("Retry-After", 5))
-                logging.warning(f"Rate limited for {retry}s")
-                await asyncio.sleep(retry)
-                return await self.delete(path, **kwargs)
-            json = await res.json()
-            return json, res.status
+
+        try:
+            async with self.session.delete(
+                f"{BASE}/{path}", headers=headers, **kwargs
+            ) as res:
+                if res.status == 401:
+                    await self.refresh_access_token()
+                    return await self.delete(path, **kwargs)
+                elif res.status == 429:
+                    retry = float(res.headers.get("Retry-After", 5))
+                    logging.warning(f"Rate limited for {retry}s")
+                    await asyncio.sleep(retry)
+                    return await self.delete(path, **kwargs)
+                json = await res.json()
+                return json, res.status
+        except Exception as e:
+            logging.error(f"An error occurred during DELETE request: {e}")
+            return None, 500
 
     async def exchange_code(self, code: str) -> bool:
         res, status = await self.post(
@@ -170,6 +190,7 @@ class MonzoHandler:
                 break
         if found:
             return True
+        logging.info("Webhook not found, creating")
         _res, status = await self.post(
             "webhooks",
             json={
