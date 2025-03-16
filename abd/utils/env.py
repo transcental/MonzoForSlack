@@ -20,6 +20,7 @@ class Environment:
         self.monzo_client_id = os.environ.get("MONZO_CLIENT_ID", "unset")
         self.monzo_client_secret = os.environ.get("MONZO_CLIENT_SECRET", "unset")
         self.domain = os.environ.get("DOMAIN", "unset")
+        self.webhook_verif = os.environ.get("WEBHOOK_VERIF", "unset")
 
         self.environment = os.environ.get("ENVIRONMENT", "development")
 
@@ -39,6 +40,7 @@ class Environment:
             client_id=self.monzo_client_id,
             client_secret=self.monzo_client_secret,
             domain=self.domain,
+            webhook_verification=self.webhook_verif,
         )
         self.slack_client = AsyncWebClient(token=self.slack_bot_token)
 

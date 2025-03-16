@@ -47,6 +47,9 @@ async def webhook(req: Request):
     data = await req.json()
     type = data.get("type")
     data = data.get("data", {})
+    verif = req.query_params.get("auth")
+    if verif != env.webhook_verification:
+        return JSONResponse({"error": "Invalid verification code"})
     match type:
         case "transaction.created":
             raw_amount = data.get("amount")
@@ -102,6 +105,11 @@ async def webhook(req: Request):
             )
             await send_heartbeat(
                 heartbeat=sentence,
+                messages=[f"```{data}```"],
+            )
+        case _:
+            await send_heartbeat(
+                heartbeat=f"Unhandled webhook type: {type}",
                 messages=[f"```{data}```"],
             )
     return JSONResponse({"message": "Request successfully received"})

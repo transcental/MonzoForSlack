@@ -12,12 +12,15 @@ BASE = "https://api.monzo.com"
 
 
 class MonzoHandler:
-    def __init__(self, client_id: str, client_secret: str, domain: str) -> None:
+    def __init__(
+        self, client_id: str, client_secret: str, domain: str, webhook_verification: str
+    ) -> None:
         self.state: Optional[str] = None
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = f"{domain}/monzo/callback"
         self.domain = domain
+        self.webhook_verification = webhook_verification
         self.session: ClientSession
 
         self.access_token: Optional[str] = None
@@ -159,14 +162,20 @@ class MonzoHandler:
         webhooks = res.get("webhooks", [])
         found = False
         for webhook in webhooks:
-            if webhook.get("url") == f"{self.domain}/monzo/webhook":
+            if (
+                webhook.get("url")
+                == f"{self.domain}/monzo/webhook?auth={self.webhook_verification}"
+            ):
                 found = True
                 break
         if found:
             return
         _res, status = await self.post(
             "webhooks",
-            data={"account_id": self.user_id, "url": f"{self.domain}/monzo/webhook"},
+            data={
+                "account_id": self.user_id,
+                "url": f"{self.domain}/monzo/webhook?auth={self.webhook_verification}",
+            },
         )
         if status != 200:
             await self.check_webhooks()
