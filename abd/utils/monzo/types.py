@@ -122,5 +122,5 @@ class UnknownTransaction:
             round(self.amount, 2)
         )
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'}"
-        self.scheme = data.get("scheme", "Monzo").title()
+        self.scheme = data.get("scheme", "Monzo").replace("_", " ").title()
         self.name = f"{self.scheme} Transaction"
