@@ -10,6 +10,7 @@ from abd.utils.logging import send_heartbeat
 from abd.utils.monzo.types import Bacs
 from abd.utils.monzo.types import FasterPayments
 from abd.utils.monzo.types import Mastercard
+from abd.utils.monzo.types import MonzoResponse
 from abd.utils.monzo.types import P2PPayment
 from abd.utils.monzo.types import PotTransfer
 from abd.utils.monzo.types import TransactionSchemes
@@ -53,9 +54,9 @@ async def monzo_callback(req: Request):
 
 
 async def webhook(req: Request):
-    data = await req.json()
-    type = data.get("type")
-    data = data.get("data", {})
+    res: MonzoResponse = await req.json()
+    type = res.type
+    data = res.data
     verif = req.query_params.get("verif")
     if verif != env.webhook_verif:
         await send_heartbeat(
@@ -66,7 +67,7 @@ async def webhook(req: Request):
     match type:
         case "transaction.created":
             try:
-                scheme = TransactionSchemes(data.get("scheme"))
+                scheme = TransactionSchemes(data.scheme)
             except ValueError:
                 scheme = None
             match scheme:

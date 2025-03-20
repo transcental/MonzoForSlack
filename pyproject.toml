@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.11.13",
     "asyncio>=3.4.3",
+    "pydantic>=2.10.6",
     "python-dotenv>=1.0.1",
     "slack-bolt>=1.22.0",
     "starlette>=0.46.1",

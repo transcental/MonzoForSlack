@@ -1,5 +1,8 @@
 from enum import Enum
 
+from pydantic import BaseModel
+from pydantic import ConfigDict
+
 from abd.utils.env import env
 
 
@@ -25,125 +28,140 @@ CURRENCIES = {
 }
 
 
-class Mastercard:
-    def __init__(self, data):
-        self.id = data.get("id", "mastercard-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
-        self.merchant = data.get("merchant", {})
-        self.merchant_name = self.merchant.get("name", "Mystery Place")
-        self.merchant_category = data.get("category", "Unknown").title()
-        self.merchant_address = self.merchant.get("address", {})
-        self.merchant_city = self.merchant_address.get("city", "").title()
-        self.merchant_country = self.merchant_address.get("country", "Unknown").title()
-        self.icon = self.merchant.get("logo", None)
-        self.emoji = data.get("emoji", ":money-printer:")
+class MonzoMerchantAddressData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    address: str
+    city: str
+    country: str
+    latitude: float
+    longitude: float
+    postcode: str
+    region: str
 
-        self.action = "spent" if self.raw_amount < 0 else "received"
+
+class MonzoMerchantData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    address: MonzoMerchantAddressData | None
+    created: str
+    group_id: str
+    id: str
+    logo: str
+    emoji: str
+    name: str
+    category: str
+
+
+class MonzoTransactionData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    account_id: str
+    amount: int
+    category: str
+    created: str
+    currency: str
+    id: str
+    local_amount: int
+    local_currency: str
+    scheme: str
+    emoji: str
+    settled: str
+    merchant: MonzoMerchantData | None
+    merchant_address: MonzoMerchantAddressData | None
+    decline_reason: str | None
+
+
+class MonzoResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    type: str
+    data: MonzoTransactionData
+
+
+class BaseTransaction:
+    def __init__(self, data: MonzoTransactionData):
+        self.id = data.id
+        self.raw_amount = data.local_amount or 0
+        self.amount = abs(self.raw_amount)
+        self.currency = data.local_currency
+        self.scheme = data.scheme.title()
+        self.category = data.category.title()
+
+        self.emoji = data.emoji or ":ac--item-bellcoin:"
+        self.merchant = data.merchant
+
+        if self.merchant:
+            self.icon = self.merchant.logo
+            self.merchant_name = self.merchant.name
+            self.merchant_address = self.merchant.address
+            if self.merchant_address:
+                self.merchant_city = self.merchant_address.city
+                self.merchant_country = self.merchant_address.country.title()
+
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
             "{:.2f}".format(self.amount / 100)
         )
+
+        self.spent = self.raw_amount < 0
+        self.action = "spent" if self.spent else "received"
         self.region_str = (
             f" in {self.merchant_city}, {self.merchant_country}"
             if self.merchant_city and self.merchant_country
             else ""
         )
-        self.cat_str = f" on {self.merchant_category}" if self.merchant_category else ""
+        self.display_name = self.merchant_name or "Unknown Place"
+        self.direction = "from" if self.spent else "to"
+        self.cat_str = f" on {self.category}" if self.category else ""
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}*{self.region_str}{self.cat_str}"
-        self.name = self.merchant_name
 
 
-class P2PPayment:
+class Mastercard(BaseTransaction):
     def __init__(self, data):
-        self.id = data.get("id", "p2p-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
+        super().__init__(data)
+        self.name = self.merchant_name or "Mystery Place"
+        self.emoji = self.emoji or ":money-printer:"
 
-        self.emoji = data.get("emoji", ":ac--item-bellcoin:")
-        self.icon = None
 
-        self.action = "sent" if self.raw_amount < 0 else "received"
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} through :monzo-pride: Monzo"
+class P2PPayment(BaseTransaction):
+    def __init__(self, data):
+        super().__init__(data)
         self.name = "Monzo Transfer"
+        self.emoji = self.emoji or ":ac--item-bellcoin:"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} {self.display_name} through :monzo-pride: Monzo"
 
 
-class FasterPayments:
+class FasterPayments(BaseTransaction):
     def __init__(self, data):
-        self.id = data.get("id", "fp-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
-
-        self.emoji = data.get("emoji", ":money-tub:")
-        self.icon = None
-
-        self.action = "sent" if self.raw_amount < 0 else "received"
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} in the :flag-gb: UK"
+        super().__init__(data)
         self.name = "Faster Payments"
+        self.emoji = self.emoji or ":money-tub:"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} {self.display_name} in the :flag-gb: UK"
 
 
-class Bacs:
+class Bacs(BaseTransaction):
     def __init__(self, data):
-        self.id = data.get("id", "bacs-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
-
-        self.emoji = data.get("emoji", ":money_with_wings:")
-        self.icon = None
-
-        self.action = "sent" if self.raw_amount < 0 else "received"
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} in the :flag-gb: UK"
+        super().__init__(data)
         self.name = "Bacs"
+        self.emoji = self.emoji or ":money_with_wings:"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} {self.display_name} in the :flag-gb: UK"
 
 
-class UnknownTransaction:
+class UnknownTransaction(BaseTransaction):
     def __init__(self, data):
-        self.id = data.get("id", "unknown-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
-
-        self.emoji = data.get("emoji", ":ac--item-bellcoin:")
-        self.icon = None
-
-        self.action = "sent" if self.raw_amount < 0 else "received"
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'}"
-        self.scheme = data.get("scheme", "Monzo").replace("_", " ").title()
+        super().__init__(data)
         self.name = f"{self.scheme} Transaction"
+        self.emoji = self.emoji or ":ac--item-bellcoin:"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} {self.display_name}"
 
 
-class PotTransfer:
+class PotTransfer(BaseTransaction):
     def __init__(self, data, pot_info):
-        self.id = data.get("id", "pot-tx")
-        self.raw_amount = data.get("local_amount", 0)
-        self.amount = abs(self.raw_amount)
-        self.currency = data.get("local_currency", "GBP")
-
-        self.emoji = data.get("emoji", ":potted_plant:")
-        self.icon = None
-
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
-
+        super().__init__(data)
         self.name = pot_info.get("name", "Unknown Pot")
+        self.emoji = self.emoji or ":potted_plant:"
 
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {'transferred' if self.raw_amount < 0 else 'withdrew'} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {'transferred' if self.raw_amount < 0 else 'withdrew'} *{self.amount_str}* {self.direction} a pot"
 
     @classmethod
     async def create(cls, data):
