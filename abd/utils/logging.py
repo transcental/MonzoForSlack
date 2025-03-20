@@ -3,7 +3,8 @@ from abd.utils.env import env
 
 async def send_heartbeat(heartbeat: str, messages: list[str] = []):
     if env.slack_heartbeat_channel:
-        heartbeat.replace("<@", "<​@")
+        heartbeat.replace("<@", "@")
+        heartbeat.replace(">", "")
         msg = await env.slack_client.chat_postMessage(
             channel=env.slack_heartbeat_channel, text=heartbeat
         )
