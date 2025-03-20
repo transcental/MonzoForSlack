@@ -177,7 +177,9 @@ class PotTransfer(BaseTransaction):
         self.name = pot_info.get("name", "Unknown Pot")
         self.emoji = self.emoji or ":potted_plant:"
 
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {'transferred' if self.raw_amount < 0 else 'withdrew'} *{self.amount_str}* {self.direction} a pot"
+        self.action = "transferred" if self.raw_amount < 0 else "withdrew"
+        self.direction = "to" if self.raw_amount < 0 else "from"
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} a pot"
 
     @classmethod
     async def create(cls, data: MonzoTransactionData):
