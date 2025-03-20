@@ -41,7 +41,7 @@ class Mastercard:
 
         self.action = "spent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            round(self.amount, 2)
+            round(self.amount / 100, 2)
         )
         self.region_str = (
             f" in {self.merchant_city}, {self.merchant_country}"
@@ -65,7 +65,7 @@ class P2PPayment:
 
         self.action = "sent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            round(self.amount, 2)
+            round(self.amount / 100, 2)
         )
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} through :monzo-pride: Monzo"
         self.name = "Monzo Transfer"
@@ -83,7 +83,7 @@ class FasterPayments:
 
         self.action = "sent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            round(self.amount, 2)
+            round(self.amount / 100, 2)
         )
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} in the :flag-gb: UK"
         self.name = "Faster Payments"
@@ -101,7 +101,7 @@ class Bacs:
 
         self.action = "sent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            round(self.amount, 2)
+            round(self.amount / 100, 2)
         )
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'} in the :flag-gb: UK"
         self.name = "Bacs"
@@ -119,7 +119,7 @@ class UnknownTransaction:
 
         self.action = "sent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            round(self.amount, 2)
+            round(self.amount / 100, 2)
         )
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'}"
         self.scheme = data.get("scheme", "Monzo").replace("_", " ").title()
