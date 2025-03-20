@@ -79,7 +79,7 @@ async def webhook(req: Request):
                 case TransactionSchemes.Bacs:
                     transaction = Bacs(data)
                 case TransactionSchemes.PotTransfer:
-                    transaction = PotTransfer(data)
+                    transaction = await PotTransfer.create(data)
                 case _:
                     transaction = UnknownTransaction(data)
 

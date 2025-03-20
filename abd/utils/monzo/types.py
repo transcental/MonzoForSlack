@@ -128,7 +128,7 @@ class UnknownTransaction:
 
 
 class PotTransfer:
-    async def __init__(self, data):
+    def __init__(self, data, pot_info):
         self.id = data.get("id", "pot-tx")
         self.raw_amount = data.get("local_amount", 0)
         self.amount = abs(self.raw_amount)
@@ -140,12 +140,18 @@ class PotTransfer:
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
             "{:.2f}".format(self.amount / 100)
         )
+
+        self.name = pot_info.get("name", "Unknown Pot")
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> transferred *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
+
+    @classmethod
+    async def create(cls, data):
         metadata = data.get("metadata", {})
         pot_id = metadata.get("pot_id", None)
         if pot_id:
             pot_info = await env.monzo_client.get_pot(pot_id) or {}
-            self.name = pot_info.get("name", "Unknown Pot")
         else:
-            self.name = "Unknown Pot"
+            pot_info = {}
 
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> transferred *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
+        return cls(data, pot_info)
