@@ -75,16 +75,15 @@ async def webhook(req: Request):
                     transaction = Bacs(data)
                 case _:
                     transaction = UnknownTransaction(data)
-            sentence = str(transaction)
 
             await env.slack_client.chat_postMessage(
-                text=sentence,
+                text=transaction.sentence,
                 channel=env.slack_log_channel,
                 icon_url=transaction.icon,
                 username=transaction.name,
             )
             await send_heartbeat(
-                heartbeat=sentence,
+                heartbeat=transaction.sentence,
                 messages=[f"```{data}```"],
             )
         case _:
