@@ -67,21 +67,23 @@ class MonzoHandler:
             logging.error(f"An error occurred during POST request: {e}")
             return None, 500
 
-    async def get(self, path: str, headers: Optional[dict] = None) -> tuple[Any, int]:
-        if headers is None:
-            headers = {}
-        headers["Authorization"] = f"Bearer {self.access_token}"
+    async def get(self, path: str, no_auth: bool = False, **kwargs) -> tuple[Any, int]:
+        headers = kwargs.pop("headers", {})
+        if not no_auth:
+            headers["Authorization"] = f"Bearer {self.access_token}"
 
         try:
-            async with self.session.get(f"{BASE}/{path}", headers=headers) as res:
+            async with self.session.get(
+                f"{BASE}/{path}", headers=headers, **kwargs
+            ) as res:
                 if res.status == 401:
                     await self.refresh_access_token()
-                    return await self.get(path, headers)
+                    return await self.get(path, no_auth, **kwargs)
                 elif res.status == 429:
-                    logging.warning("Rate limited")
                     retry = float(res.headers.get("Retry-After", 5))
+                    logging.warning(f"Rate limited for {retry}s")
                     await asyncio.sleep(retry)
-                    return await self.get(path, headers)
+                    return await self.get(path, no_auth, **kwargs)
                 elif res.status == 403:
                     logging.error(
                         "Request authenticated but has no perms - not confirmed in app?"
@@ -225,15 +227,15 @@ class MonzoHandler:
         #     await self.check_webhooks()
         return False
 
-    async def get_pots(self) -> list[dict]:
-        res, _status = await self.get("pots")
+    async def get_pots(self, account_id: str) -> list[dict]:
+        res, _status = await self.get("pots", data={"current_account_id": account_id})
         if _status != 200:
             logging.error("Failed to get pots")
             return []
         return res.get("pots", [])
 
-    async def get_pot(self, id: str) -> Optional[dict]:
-        pots = await self.get_pots()
+    async def get_pot(self, id: str, account_id: str) -> Optional[dict]:
+        pots = await self.get_pots(account_id)
         for pot in pots:
             if pot.get("id") == id:
                 return pot

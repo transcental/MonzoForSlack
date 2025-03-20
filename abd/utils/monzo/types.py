@@ -143,14 +143,15 @@ class PotTransfer:
 
         self.name = pot_info.get("name", "Unknown Pot")
 
-        self.sentence = f"{self.emoji} <@{env.slack_user_id}> transferred *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {'transferred' if self.raw_amount < 0 else 'withdrew'} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
 
     @classmethod
     async def create(cls, data):
         metadata = data.get("metadata", {})
         pot_id = metadata.get("pot_id", None)
-        if pot_id:
-            pot_info = await env.monzo_client.get_pot(pot_id) or {}
+        account_id = data.get("account_id", None)
+        if pot_id and account_id:
+            pot_info = await env.monzo_client.get_pot(pot_id, account_id) or {}
         else:
             pot_info = {}
 
