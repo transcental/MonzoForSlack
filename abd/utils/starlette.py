@@ -54,7 +54,7 @@ async def monzo_callback(req: Request):
 
 
 async def webhook(req: Request):
-    res: MonzoResponse = await req.json()
+    res = MonzoResponse.parse_obj(await req.json())
     type = res.type
     data = res.data
     verif = req.query_params.get("verif")
