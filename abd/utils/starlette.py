@@ -64,7 +64,11 @@ async def webhook(req: Request):
         return JSONResponse({"error": "Invalid verification code"})
     match type:
         case "transaction.created":
-            match data.get("scheme"):
+            try:
+                scheme = TransactionSchemes(data.get("scheme"))
+            except ValueError:
+                scheme = None
+            match scheme:
                 case TransactionSchemes.Mastercard:
                     transaction = Mastercard(data)
                 case TransactionSchemes.P2PPayment:
