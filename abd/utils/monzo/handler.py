@@ -228,8 +228,8 @@ class MonzoHandler:
     async def get_pots(self) -> list[dict]:
         res, _status = await self.get("pots")
         if _status != 200:
-            await asyncio.sleep(0.1)
-            await self.get_pots()
+            logging.error("Failed to get pots")
+            return []
         return res.get("pots", [])
 
     async def get_pot(self, id: str) -> Optional[dict]:
