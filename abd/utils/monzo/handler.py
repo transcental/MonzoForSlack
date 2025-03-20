@@ -211,7 +211,7 @@ class MonzoHandler:
         if found:
             logging.info("Webhook found")
             return True
-        logging.info("Webhook not found")
+        # logging.info("Webhook not found")
         # _res, status = await self.post(
         #     "webhooks",
         #     no_auth=False,
