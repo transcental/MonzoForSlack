@@ -95,7 +95,7 @@ class BaseTransaction:
 
         self.emoji = data.emoji or ":ac--item-bellcoin:"
         self.merchant = data.merchant
-        self.region_str: str
+        self.region_str = ""
         self.icon = None
         self.merchant_name = None
         self.merchant_address = None
