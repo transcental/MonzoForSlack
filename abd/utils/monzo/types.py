@@ -97,6 +97,10 @@ class BaseTransaction:
         self.merchant = data.merchant
         self.region_str: str
         self.icon = None
+        self.merchant_name = None
+        self.merchant_address = None
+        self.merchant_city = None
+        self.merchant_country = None
 
         if self.merchant:
             self.icon = self.merchant.logo
