@@ -51,6 +51,15 @@ class MonzoMerchantData(BaseModel):
     category: str
 
 
+class MonzoTransactionMetadata(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    external_id: str | None = None
+    pot_account_id: str | None = None
+    pot_id: str | None = None
+    user_id: str | None = None
+    trigger: str | None = None
+
+
 class MonzoTransactionData(BaseModel):
     model_config = ConfigDict(extra="allow")
     account_id: str
@@ -66,6 +75,7 @@ class MonzoTransactionData(BaseModel):
     settled: str
     merchant: MonzoMerchantData | None
     decline_reason: str | None = None
+    metadata: MonzoTransactionMetadata | None
 
 
 class MonzoResponse(BaseModel):
@@ -112,14 +122,14 @@ class BaseTransaction:
 
 
 class Mastercard(BaseTransaction):
-    def __init__(self, data):
+    def __init__(self, data: MonzoTransactionData):
         super().__init__(data)
         self.name = self.merchant_name or "Mystery Place"
         self.emoji = self.emoji or ":money-printer:"
 
 
 class P2PPayment(BaseTransaction):
-    def __init__(self, data):
+    def __init__(self, data: MonzoTransactionData):
         super().__init__(data)
         self.name = "Monzo Transfer"
         self.emoji = self.emoji or ":ac--item-bellcoin:"
@@ -128,7 +138,7 @@ class P2PPayment(BaseTransaction):
 
 
 class FasterPayments(BaseTransaction):
-    def __init__(self, data):
+    def __init__(self, data: MonzoTransactionData):
         super().__init__(data)
         self.name = "Faster Payments"
         self.emoji = self.emoji or ":money-tub:"
@@ -137,7 +147,7 @@ class FasterPayments(BaseTransaction):
 
 
 class Bacs(BaseTransaction):
-    def __init__(self, data):
+    def __init__(self, data: MonzoTransactionData):
         super().__init__(data)
         self.name = "Bacs"
         self.emoji = self.emoji or ":money_with_wings:"
@@ -146,7 +156,7 @@ class Bacs(BaseTransaction):
 
 
 class UnknownTransaction(BaseTransaction):
-    def __init__(self, data):
+    def __init__(self, data: MonzoTransactionData):
         super().__init__(data)
         self.name = f"{self.scheme} Transaction"
         self.emoji = self.emoji or ":ac--item-bellcoin:"
@@ -155,7 +165,7 @@ class UnknownTransaction(BaseTransaction):
 
 
 class PotTransfer(BaseTransaction):
-    def __init__(self, data, pot_info):
+    def __init__(self, data: MonzoTransactionData, pot_info):
         super().__init__(data)
         self.name = pot_info.get("name", "Unknown Pot")
         self.emoji = self.emoji or ":potted_plant:"
@@ -163,13 +173,13 @@ class PotTransfer(BaseTransaction):
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {'transferred' if self.raw_amount < 0 else 'withdrew'} *{self.amount_str}* {self.direction} a pot"
 
     @classmethod
-    async def create(cls, data):
-        metadata = data.get("metadata", {})
-        pot_id = metadata.get("pot_id", None)
-        account_id = data.get("account_id", None)
-        if pot_id and account_id:
-            pot_info = await env.monzo_client.get_pot(pot_id, account_id) or {}
-        else:
-            pot_info = {}
+    async def create(cls, data: MonzoTransactionData):
+        metadata = data.metadata
+        pot_info = {}
+        if metadata:
+            pot_id = metadata.pot_id
+            account_id = data.account_id
+            if pot_id and account_id:
+                pot_info = await env.monzo_client.get_pot(pot_id, account_id) or {}
 
         return cls(data, pot_info)
