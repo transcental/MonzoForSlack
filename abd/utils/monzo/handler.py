@@ -227,11 +227,14 @@ class MonzoHandler:
 
     async def get_pots(self) -> list[dict]:
         res, _status = await self.get("pots")
+        if _status != 200:
+            await asyncio.sleep(0.1)
+            await self.get_pots()
         return res.get("pots", [])
 
     async def get_pot(self, id: str) -> Optional[dict]:
-        res, _status = await self.get_pots()
-        for pot in res:
+        pots = await self.get_pots()
+        for pot in pots:
             if pot.get("id") == id:
                 return pot
         return None
