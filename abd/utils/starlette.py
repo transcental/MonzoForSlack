@@ -7,6 +7,12 @@ from starlette.routing import Route
 from abd.__main__ import main
 from abd.utils.env import env
 from abd.utils.logging import send_heartbeat
+from abd.utils.monzo.types import Bacs
+from abd.utils.monzo.types import FasterPayments
+from abd.utils.monzo.types import Mastercard
+from abd.utils.monzo.types import P2PPayment
+from abd.utils.monzo.types import TransactionSchemes
+from abd.utils.monzo.types import UnknownTransaction
 from abd.utils.slack import app as slack_app
 
 req_handler = AsyncSlackRequestHandler(slack_app)
@@ -58,56 +64,24 @@ async def webhook(req: Request):
         return JSONResponse({"error": "Invalid verification code"})
     match type:
         case "transaction.created":
-            raw_amount = data.get("amount")
-            merchant = data.get("merchant", {}) or {}
-            # Check if it's a transfer
-            metadata = data.get("metadata", {}) or {}
-
-            icon = merchant.get("logo")
-            emoji = merchant.get("emoji", ":ac--item-bellcoin:")
-            name = merchant.get("name", "a mystery place")
-            address = merchant.get("address", {})
-            city = address.get("city")
-            country = address.get("country")
-
-            currency = data.get("currency")
-            category = data.get("category")
-            action = "spent" if raw_amount < 0 else "received"
-            amount = abs(raw_amount)
-
-            match currency:
-                case "GBP":
-                    symbol = "£"
-                case "USD":
-                    symbol = "$"
-                case "EUR":
-                    symbol = "€"
-                case "JPY":
-                    symbol = "¥"
-                case "AUD":
-                    symbol = "A$"
-                case "CAD":
-                    symbol = "C$"
+            match data.get("scheme"):
+                case TransactionSchemes.Mastercard:
+                    transaction = Mastercard(data)
+                case TransactionSchemes.P2PPayment:
+                    transaction = P2PPayment(data)
+                case TransactionSchemes.FasterPayments:
+                    transaction = FasterPayments(data)
+                case TransactionSchemes.Bacs:
+                    transaction = Bacs(data)
                 case _:
-                    symbol = currency
-
-            amount_str = f"{symbol}{(amount / 100):.2f}"
-            region_str = f" in {city}, {country}" if city and country else ""
-            cat_str = f" on {category}" if category else ""
-
-            sentence = f"{emoji} <@{env.slack_user_id}> {action} *{amount_str}*{region_str}{cat_str}"
-
-            if metadata.get("p2p_transfer_id"):
-                # P2P Transfer
-                name = "Monzo Transfer"
-                emoji = ":blobby-money_with_wings:"
-                sentence = f"{emoji} <@{env.slack_user_id}> {'received' if raw_amount > 0 else 'sent'} a *{amount_str}* transfer {'from' if raw_amount > 0 else 'to'} {'a greedy person' if raw_amount < 0 else 'a kind person'}"
+                    transaction = UnknownTransaction(data)
+            sentence = str(transaction)
 
             await env.slack_client.chat_postMessage(
                 text=sentence,
                 channel=env.slack_log_channel,
-                icon_url=icon,
-                username=name,
+                icon_url=transaction.icon,
+                username=transaction.name,
             )
             await send_heartbeat(
                 heartbeat=sentence,
