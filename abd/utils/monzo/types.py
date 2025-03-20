@@ -95,14 +95,21 @@ class BaseTransaction:
 
         self.emoji = data.emoji or ":ac--item-bellcoin:"
         self.merchant = data.merchant
+        self.region_str: str
+        self.icon = None
 
         if self.merchant:
             self.icon = self.merchant.logo
             self.merchant_name = self.merchant.name
             self.merchant_address = self.merchant.address
             if self.merchant_address:
-                self.merchant_city = self.merchant_address.city
+                self.merchant_city = self.merchant_address.city or ""
                 self.merchant_country = self.merchant_address.country.title()
+                self.region_str = (
+                    f" in {self.merchant_city}, {self.merchant_country}"
+                    if self.merchant_city and self.merchant_country
+                    else ""
+                )
 
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
             "{:.2f}".format(self.amount / 100)
@@ -110,11 +117,7 @@ class BaseTransaction:
 
         self.spent = self.raw_amount < 0
         self.action = "spent" if self.spent else "received"
-        self.region_str = (
-            f" in {self.merchant_city}, {self.merchant_country}"
-            if self.merchant_city and self.merchant_country
-            else ""
-        )
+
         self.display_name = self.merchant_name or "Unknown Place"
         self.direction = "from" if self.spent else "to"
         self.cat_str = f" on {self.category}" if self.category else ""
