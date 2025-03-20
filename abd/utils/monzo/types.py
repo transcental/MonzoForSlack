@@ -45,8 +45,8 @@ class MonzoMerchantData(BaseModel):
     created: str
     group_id: str
     id: str
-    logo: str
-    emoji: str
+    logo: str | None = None
+    emoji: str | None = None
     name: str
     category: str
 
@@ -62,11 +62,10 @@ class MonzoTransactionData(BaseModel):
     local_amount: int
     local_currency: str
     scheme: str
-    emoji: str
+    emoji: str | None = None
     settled: str
     merchant: MonzoMerchantData | None
-    merchant_address: MonzoMerchantAddressData | None
-    decline_reason: str | None
+    decline_reason: str | None = None
 
 
 class MonzoResponse(BaseModel):
