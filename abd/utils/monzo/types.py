@@ -8,6 +8,7 @@ class TransactionSchemes(Enum):
     P2PPayment = "p2p_payment"
     FasterPayments = "payport_faster_payments"
     Bacs = "bacs"
+    PotTransfer = "uk_retail_pot"
 
 
 CURRENCIES = {
@@ -37,7 +38,7 @@ class Mastercard:
         self.merchant_city = self.merchant_address.get("city", "").title()
         self.merchant_country = self.merchant_address.get("country", "Unknown").title()
         self.icon = self.merchant.get("logo", None)
-        self.emoji = data.get("emoji", ":ac--item-bellcoin:")
+        self.emoji = data.get("emoji", ":money-printer:")
 
         self.action = "spent" if self.raw_amount < 0 else "received"
         self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
@@ -124,3 +125,27 @@ class UnknownTransaction:
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} {'a greedy person' if self.raw_amount < 0 else 'a kind person'}"
         self.scheme = data.get("scheme", "Monzo").replace("_", " ").title()
         self.name = f"{self.scheme} Transaction"
+
+
+class PotTransfer:
+    async def __init__(self, data):
+        self.id = data.get("id", "pot-tx")
+        self.raw_amount = data.get("local_amount", 0)
+        self.amount = abs(self.raw_amount)
+        self.currency = data.get("local_currency", "GBP")
+
+        self.emoji = data.get("emoji", ":potted_plant:")
+        self.icon = None
+
+        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
+            "{:.2f}".format(self.amount / 100)
+        )
+        metadata = data.get("metadata", {})
+        pot_id = metadata.get("pot_id", None)
+        if pot_id:
+            pot_info = await env.monzo_client.get_pot(pot_id) or {}
+            self.name = pot_info.get("name", "Unknown Pot")
+        else:
+            self.name = "Unknown Pot"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> transferred *{self.amount_str}* {'from' if self.raw_amount > 0 else 'to'} a pot"
