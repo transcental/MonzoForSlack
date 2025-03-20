@@ -228,7 +228,7 @@ class MonzoHandler:
         return False
 
     async def get_pots(self, account_id: str) -> list[dict]:
-        res, _status = await self.get("pots", data={"current_account_id": account_id})
+        res, _status = await self.get(f"pots?current_account_id={account_id}")
         if _status != 200:
             logging.error("Failed to get pots", _status)
             return []
