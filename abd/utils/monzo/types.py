@@ -30,24 +30,21 @@ CURRENCIES = {
 
 class MonzoMerchantAddressData(BaseModel):
     model_config = ConfigDict(extra="allow")
-    address: str
-    city: str
-    country: str
-    latitude: float
-    longitude: float
-    postcode: str
-    region: str
+    address: str | None
+    city: str | None
+    country: str | None
+    region: str | None
 
 
 class MonzoMerchantData(BaseModel):
     model_config = ConfigDict(extra="allow")
     address: MonzoMerchantAddressData | None
-    group_id: str
+    group_id: str | None = None
     id: str
     logo: str | None = None
     emoji: str | None = None
-    name: str
-    category: str
+    name: str | None = None
+    category: str | None = "Unknown"
 
 
 class MonzoTransactionMetadata(BaseModel):
@@ -62,15 +59,13 @@ class MonzoTransactionMetadata(BaseModel):
 class MonzoTransactionData(BaseModel):
     model_config = ConfigDict(extra="allow")
     account_id: str
-    amount: int
-    category: str
-    currency: str
+    category: str | None
     id: str
     local_amount: int
     local_currency: str
     scheme: str
     emoji: str | None = None
-    settled: str
+    settled: str | None
     merchant: MonzoMerchantData | None
     decline_reason: str | None = None
     metadata: MonzoTransactionMetadata | None
