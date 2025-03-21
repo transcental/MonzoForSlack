@@ -65,7 +65,7 @@ class MonzoTransactionData(BaseModel):
     account_id: str
     amount: int
     category: str
-    created: str
+    created: str = ""
     currency: str
     id: str
     local_amount: int
