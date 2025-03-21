@@ -42,7 +42,6 @@ class MonzoMerchantAddressData(BaseModel):
 class MonzoMerchantData(BaseModel):
     model_config = ConfigDict(extra="allow")
     address: MonzoMerchantAddressData | None
-    created: str
     group_id: str
     id: str
     logo: str | None = None
@@ -65,7 +64,6 @@ class MonzoTransactionData(BaseModel):
     account_id: str
     amount: int
     category: str
-    created: str | None = None
     currency: str
     id: str
     local_amount: int
