@@ -122,8 +122,8 @@ class BaseTransaction:
         self.spent = self.raw_amount < 0
         self.action = "spent" if self.spent else "received"
 
-        self.display_name = self.merchant_name or "Unknown Place"
-        self.direction = "from" if self.spent else "to"
+        self.display_name = self.merchant_name or "somewhere"
+        self.direction = "to" if self.spent else "from"
         self.cat_str = f" on {self.category}" if self.category else ""
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}*{self.region_str}{self.cat_str}"
 
@@ -178,7 +178,6 @@ class PotTransfer(BaseTransaction):
         self.emoji = self.emoji or ":potted_plant:"
 
         self.action = "transferred" if self.raw_amount < 0 else "withdrew"
-        self.direction = "to" if self.raw_amount < 0 else "from"
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} a pot"
 
     @classmethod
