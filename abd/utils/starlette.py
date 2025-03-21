@@ -72,6 +72,10 @@ async def webhook(req: Request):
                 scheme = None
             match scheme:
                 case TransactionSchemes.Mastercard:
+                    if data.notes == "Active card check":
+                        return JSONResponse(
+                            {"message": "Request successfully received"}
+                        )
                     transaction = Mastercard(data)
                 case TransactionSchemes.P2PPayment:
                     transaction = P2PPayment(data)

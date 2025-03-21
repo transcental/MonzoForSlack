@@ -69,6 +69,7 @@ class MonzoTransactionData(BaseModel):
     merchant: MonzoMerchantData | None
     decline_reason: str | None = None
     metadata: MonzoTransactionMetadata | None
+    notes: str | None = None
 
 
 class MonzoResponse(BaseModel):
@@ -84,7 +85,8 @@ class BaseTransaction:
         self.amount = abs(self.raw_amount)
         self.currency = data.local_currency
         self.scheme = data.scheme.title()
-        self.category = data.category.title()
+        self.category = data.category or "Unknown"
+        self.category = self.category.title()
 
         self.emoji = data.emoji or ":ac--item-bellcoin:"
         self.merchant = data.merchant
@@ -101,7 +103,8 @@ class BaseTransaction:
             self.merchant_address = self.merchant.address
             if self.merchant_address:
                 self.merchant_city = self.merchant_address.city or ""
-                self.merchant_country = self.merchant_address.country.title()
+                self.merchant_country = self.merchant_address.country or ""
+                self.merchant_country = self.merchant_country.title()
                 self.region_str = (
                     f" in {self.merchant_city}, {self.merchant_country}"
                     if self.merchant_city and self.merchant_country
