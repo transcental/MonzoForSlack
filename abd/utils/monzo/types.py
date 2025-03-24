@@ -12,6 +12,7 @@ class TransactionSchemes(Enum):
     FasterPayments = "payport_faster_payments"
     Bacs = "bacs"
     PotTransfer = "uk_retail_pot"
+    PostOfficeDeposit = "uk_cash_deposits_post_office_banking"
 
 
 CURRENCIES = {
@@ -84,7 +85,7 @@ class BaseTransaction:
         self.raw_amount = data.local_amount or 0
         self.amount = abs(self.raw_amount)
         self.currency = data.local_currency
-        self.scheme = data.scheme.title()
+        self.scheme = data.scheme.title().replace("_", " ")
         self.category = data.category or "Unknown"
         self.category = self.category.title()
 
@@ -156,6 +157,17 @@ class Bacs(BaseTransaction):
         self.emoji = self.emoji or ":money_with_wings:"
 
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} {self.display_name} in the :flag-gb: UK"
+
+
+class PostOfficeDeposit(BaseTransaction):
+    def __init__(self, data: MonzoTransactionData):
+        super().__init__(data)
+        self.name = "Post Office Deposit"
+        self.emoji = self.emoji or ":pound:"
+
+        self.action = "deposited" if self.raw_amount > 0 else "withdrew"
+        self.direction = "into" if self.raw_amount > 0 else "from"
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} their account"
 
 
 class UnknownTransaction(BaseTransaction):

@@ -12,6 +12,7 @@ from abd.utils.monzo.types import FasterPayments
 from abd.utils.monzo.types import Mastercard
 from abd.utils.monzo.types import MonzoResponse
 from abd.utils.monzo.types import P2PPayment
+from abd.utils.monzo.types import PostOfficeDeposit
 from abd.utils.monzo.types import PotTransfer
 from abd.utils.monzo.types import TransactionSchemes
 from abd.utils.monzo.types import UnknownTransaction
@@ -85,6 +86,8 @@ async def webhook(req: Request):
                     transaction = Bacs(data)
                 case TransactionSchemes.PotTransfer:
                     transaction = await PotTransfer.create(data)
+                case TransactionSchemes.PostOfficeDeposit:
+                    transaction = PostOfficeDeposit(data)
                 case _:
                     transaction = UnknownTransaction(data)
 
