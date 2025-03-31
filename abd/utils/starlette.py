@@ -65,6 +65,14 @@ async def webhook(req: Request):
             messages=[f"Code: `{verif}`\n```{data}```"],
         )
         return JSONResponse({"error": "Invalid verification code"})
+
+    if data.decline_reason:
+        await send_heartbeat(
+            heartbeat=f"Transaction declined for {data.decline_reason}",
+            messages=[f"```{data}```"],
+        )
+        return JSONResponse({"message": "Request successfully received"})
+
     match type:
         case "transaction.created":
             try:
