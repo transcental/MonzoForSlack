@@ -89,7 +89,7 @@ class BaseTransaction:
         self.category = data.category or "Unknown"
         self.category = self.category.title()
 
-        self.emoji = data.emoji or ":ac--item-bellcoin:"
+        self.emoji = None
         self.merchant = data.merchant
         self.region_str = ""
         self.icon = None
@@ -102,6 +102,7 @@ class BaseTransaction:
             self.icon = self.merchant.logo
             self.merchant_name = self.merchant.name
             self.merchant_address = self.merchant.address
+            self.emoji = self.merchant.emoji or self.emoji
             if self.merchant_address:
                 self.merchant_city = self.merchant_address.city or ""
                 self.merchant_country = self.merchant_address.country or ""
