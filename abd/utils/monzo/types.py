@@ -64,6 +64,8 @@ class MonzoTransactionData(BaseModel):
     id: str
     local_amount: int
     local_currency: str
+    currency: str
+    amount: int
     scheme: str
     emoji: str | None = None
     settled: str | None
@@ -82,9 +84,13 @@ class MonzoResponse(BaseModel):
 class BaseTransaction:
     def __init__(self, data: MonzoTransactionData):
         self.id = data.id
-        self.raw_amount = data.local_amount or 0
+        self.raw_local_amount = data.local_amount or 0
+        self.local_amount = abs(self.raw_local_amount)
+        self.local_currency = data.local_currency
+        self.raw_amount = data.amount or 0
         self.amount = abs(self.raw_amount)
-        self.currency = data.local_currency
+        self.currency = data.currency
+
         self.scheme = data.scheme.title().replace("_", " ")
         self.category = data.category or "Unknown"
         self.category = self.category.title()
@@ -113,11 +119,17 @@ class BaseTransaction:
                     else ""
                 )
 
-        self.amount_str = CURRENCIES.get(self.currency, f"{self.currency} {{}}").format(
-            "{:.2f}".format(self.amount / 100)
-        )
+        self.amount_str = CURRENCIES.get(
+            self.local_currency, f"{self.local_currency} {{}}"
+        ).format("{:.2f}".format(self.local_amount / 100))
 
-        self.spent = self.raw_amount < 0
+        if self.local_currency != self.currency:
+            temp_amount_str = CURRENCIES.get(
+                self.currency, f"{self.currency} {{}}"
+            ).format("{:.2f}".format(self.amount / 100))
+            self.amount_str += f"({temp_amount_str})"
+
+        self.spent = self.raw_local_amount < 0
         self.action = "spent" if self.spent else "received"
 
         self.display_name = self.merchant_name or "somewhere"
