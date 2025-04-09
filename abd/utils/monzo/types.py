@@ -108,7 +108,7 @@ class BaseTransaction:
             self.icon = self.merchant.logo
             self.merchant_name = self.merchant.name
             self.merchant_address = self.merchant.address
-            self.emoji = self.merchant.emoji or self.emoji
+            self.emoji = self.merchant.emoji or self.data.emoji or self.emoji
             if self.merchant_address:
                 self.merchant_city = self.merchant_address.city or ""
                 self.merchant_country = self.merchant_address.country or ""
@@ -143,6 +143,8 @@ class Mastercard(BaseTransaction):
         super().__init__(data)
         self.name = self.merchant_name or "Mystery Place"
         self.emoji = self.emoji or ":money-printer:"
+
+        self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}*{self.region_str}{self.cat_str}"
 
 
 class P2PPayment(BaseTransaction):
