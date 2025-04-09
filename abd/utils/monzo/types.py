@@ -108,7 +108,7 @@ class BaseTransaction:
             self.icon = self.merchant.logo
             self.merchant_name = self.merchant.name
             self.merchant_address = self.merchant.address
-            self.emoji = self.merchant.emoji or self.data.emoji or self.emoji
+            self.emoji = self.merchant.emoji or data.emoji or self.emoji
             if self.merchant_address:
                 self.merchant_city = self.merchant_address.city or ""
                 self.merchant_country = self.merchant_address.country or ""
