@@ -127,7 +127,7 @@ class BaseTransaction:
             temp_amount_str = CURRENCIES.get(
                 self.currency, f"{self.currency} {{}}"
             ).format("{:.2f}".format(self.amount / 100))
-            self.amount_str += f"({temp_amount_str})"
+            self.amount_str += f" ({temp_amount_str})"
 
         self.spent = self.raw_local_amount < 0
         self.action = "spent" if self.spent else "received"
