@@ -199,7 +199,10 @@ class PotTransfer(BaseTransaction):
         super().__init__(data)
         self.name = pot_info.get("name", "Unknown Pot")
         self.emoji = self.emoji or ":potted_plant:"
-        self.icon = pot_info.get("cover_image_url", None)
+        pot_icon = pot_info.get("cover_image_url", None)
+        self.icon = (
+            f"https://square.uwu.mba/square?url={pot_icon}" if pot_icon else None
+        )
 
         self.action = "transferred" if self.raw_amount < 0 else "withdrew"
         self.sentence = f"{self.emoji} <@{env.slack_user_id}> {self.action} *{self.amount_str}* {self.direction} a pot"
