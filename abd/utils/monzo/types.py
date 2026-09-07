@@ -1,7 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 from abd.utils.env import env
 
@@ -121,12 +120,12 @@ class BaseTransaction:
 
         self.amount_str = CURRENCIES.get(
             self.local_currency, f"{self.local_currency} {{}}"
-        ).format("{:.2f}".format(self.local_amount / 100))
+        ).format(f"{self.local_amount / 100:.2f}")
 
         if self.local_currency != self.currency:
             temp_amount_str = CURRENCIES.get(
                 self.currency, f"{self.currency} {{}}"
-            ).format("{:.2f}".format(self.amount / 100))
+            ).format(f"{self.amount / 100:.2f}")
             self.amount_str += f" ({temp_amount_str})"
 
         self.spent = self.raw_local_amount < 0
