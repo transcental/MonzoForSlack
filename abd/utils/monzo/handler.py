@@ -3,10 +3,8 @@ import binascii
 import logging
 import os
 from typing import Any
-from typing import Optional
 
 from aiohttp import ClientSession
-
 
 BASE = "https://api.monzo.com"
 
@@ -15,7 +13,7 @@ class MonzoHandler:
     def __init__(
         self, client_id: str, client_secret: str, domain: str, webhook_verification: str
     ) -> None:
-        self.state: Optional[str] = None
+        self.state: str | None = None
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = f"{domain}/monzo/callback"
@@ -23,10 +21,10 @@ class MonzoHandler:
         self.webhook_verification = webhook_verification
         self.session: ClientSession
 
-        self.access_token: Optional[str] = None
-        self.refresh_token: Optional[str] = None
-        self.expires_in: Optional[int] = None
-        self.user_id: Optional[str] = None
+        self.access_token: str | None = None
+        self.refresh_token: str | None = None
+        self.expires_in: int | None = None
+        self.user_id: str | None = None
 
     def generate_state(self) -> str:
         signature = binascii.hexlify(os.urandom(32))
@@ -234,7 +232,7 @@ class MonzoHandler:
             return []
         return res.get("pots", [])
 
-    async def get_pot(self, id: str, account_id: str) -> Optional[dict]:
+    async def get_pot(self, id: str, account_id: str) -> dict | None:
         pots = await self.get_pots(account_id)
         for pot in pots:
             if pot.get("id") == id:
