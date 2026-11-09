@@ -7,15 +7,17 @@ from starlette.routing import Route
 from abd.__main__ import main
 from abd.utils.env import env
 from abd.utils.logging import send_heartbeat
-from abd.utils.monzo.types import Bacs
-from abd.utils.monzo.types import FasterPayments
-from abd.utils.monzo.types import Mastercard
-from abd.utils.monzo.types import MonzoResponse
-from abd.utils.monzo.types import P2PPayment
-from abd.utils.monzo.types import PostOfficeDeposit
-from abd.utils.monzo.types import PotTransfer
-from abd.utils.monzo.types import TransactionSchemes
-from abd.utils.monzo.types import UnknownTransaction
+from abd.utils.monzo.types import (
+    Bacs,
+    FasterPayments,
+    Mastercard,
+    MonzoResponse,
+    P2PPayment,
+    PostOfficeDeposit,
+    PotTransfer,
+    TransactionSchemes,
+    UnknownTransaction,
+)
 from abd.utils.slack import app as slack_app
 
 req_handler = AsyncSlackRequestHandler(slack_app)
